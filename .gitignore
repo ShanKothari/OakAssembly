@@ -1,0 +1,11 @@
+# Regular R and RStudio stuff
+**.Rapp.history
+**.Rhistory
+.Rproj.user
+.Rproj.user/*
+
+# Html from kniting README.md
+README.html
+
+# Huge raw data directories (raw FIA tables)
+data/raw/fia/*
