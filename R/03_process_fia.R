@@ -1,13 +1,10 @@
-########################################
-# Temporary directory
-########################################
-
-tmpdir_ref_sp = tempdir()
+library("readr")
 
 ########################################
 # Species lookup
 ########################################
 
+tmpdir_ref_sp = tempdir()
 unzip("data/raw/fia/REF_SPECIES.zip", exdir = tmpdir_ref_sp, overwrite = TRUE)
 
 species_lookup_path = file.path(tmpdir_ref_sp, "REF_SPECIES.CSV")
@@ -15,46 +12,66 @@ species_lookup      = read.csv(species_lookup_path)
 species_lookup      = species_lookup[ , c("SPCD", "COMMON_NAME", "GENUS", "SPECIES",
                                           "VARIETY", "SUBSPECIES", "SPECIES_SYMBOL")]
 
+## Keep all species for now
+# species_lookup = species_lookup[ species_lookup$GENUS == "Quercus",  ]
+
 saveRDS(species_lookup, "data/clean/fia/species_lookup.rds")
-unlink(species_lookup_path)
+unlink(tmpdir_ref_sp, recursive = TRUE)
+
+################################################################################
+# By State
+################################################################################
+
+states_paths = list.dirs("data/raw/fia", full.names = TRUE, recursive = FALSE)
+states       = basename(states_paths)
 
 ########################################
-# Plot lookup
+# Tree data: first pass
 ########################################
 
+for(i in seq_along(states) ){
 
+    # Create temporary directory
+    tmpdir_trees = tempdir()
 
+    # Unzip to tempdir the state's tree file
+    unzip(zipfile = dir(states_paths[[i]], pattern = "TREE.zip", full.names = TRUE),
+          exdir   = tmpdir_trees,
+          overwrite = TRUE)
 
+    keep = c("CN", "PLT_CN", "INVYR", "STATECD", "UNITCD", "COUNTYCD",
+             "PLOT", "SUBP", "TREE", "SPCD", "DIA", "CARBON_AG", "CARBON_BG")
 
+    # Read unzipped CSV
+    x = readr::read_csv(dir(tmpdir_trees, pattern = "TREE.csv", full.names = TRUE))
 
-process_fia_data = function() {
-    species  = data.table::fread("~/Desktop/fia/REF_SPECIES.CSV")
-    trees    = data.table::fread("~/Desktop/fia/TREE.CSV")
-    plots    = data.table::fread("~/Desktop/fia/PLOT.CSV")
+    # Clean up temporary dir
+    unlink(tmpdir_trees, recursive = TRUE)
 
-    oak_sp   = subset(species, species$GENUS == "Quercus")
-    oak_tree = subset(trees, trees$SPCD %in% oak_sp$SPCD)
-    oak_plot = subset(plots, plots$PLOT %in% oak_tree$PLOT)
+    # Trim useless columns
+    x = x[ , keep]
 
-    uid_t    = paste(oak_tree$PLOT, oak_tree$SUBP, oak_tree$TREE, sep = "_")
-    oak_t_s  = cbind(uid_t, oak_tree)
-    oak_t_s  = oak_t_s[oak_t_s$INVYR != 9999, ]
-    oak_t_s  = oak_t_s[ order(oak_t_s$INVYR, decreasing = T), ]
-    oak_t_s  = oak_t_s[!duplicated(oak_t_s$uid_t), ]
+    # Create a unique id for trees
+    uid_t = paste(x$PLOT, x$SUBP, x$TREE, sep = "_")
+    x = cbind(uid_t = uid_t, x)
 
+    # Remove bogus inventory years
+    x = x[ x$INVYR != 9999, ]
 
-    n        = match(oak_t_s$SPCD , oak_sp$SPCD)
-    s        = subset(oak_sp, select = c("SPCD", "COMMON_NAME","GENUS","SPECIES","VARIETY","SUBSPECIES") )
-    l        = s[n, ]
+    # Order data by inventory year
+    x = x[ order(x$INVYR, decreasing = TRUE), ]
 
-    v        = match(oak_t_s$PLT_CN, plots$CN)
-    q        = subset(plots, select = c("LAT", "LON", "ELEV", "ECOSUBCD") )
-    p        = q[v, ]
+    # Remove duplicate unique ids. This should keep the most recent data for
+    # each tree, since the whole date has been sorted by year
+    x = x[ !duplicated(x$uid_t), ]
 
-    oak_dat  = cbind(l, p, oak_t_s)
-    write.csv(oak_dat, "shan_fia_oaks.csv")
+    # Write out table
+    p = file.path("data/clean/fia", states[[i]])
 
+    if(!dir.exists(p)){
+        dir.create(p, showWarnings = FALSE)
+    }
+
+    saveRDS(x, file.path(p, "intermediate_TREE.rds"))
 }
-
-
 

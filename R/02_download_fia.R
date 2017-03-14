@@ -15,10 +15,11 @@ states      = setdiff(fips$STUSAB, rm_states)
 
 fia_tab = fia::list_available_tables()
 
-fia::download_fia_tables(table_names           = c("REF_SPECIES", "PLOT", "TREE"),
+fia::download_fia_tables(table_names           = c("REF_SPECIES", "PLOT", "TREE", "COND"),
                          states                = states,
                          destination_dir       = "data/raw/fia",
                          list_available_tables = fia_tab,
                          table_format          = "zip",
                          dir_by_sate           = TRUE,
-                         overwrite             = TRUE)
+                         overwrite             = FALSE)
+

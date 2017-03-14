@@ -7,5 +7,6 @@
 # Html from kniting README.md
 README.html
 
-# Huge raw data directories (raw FIA tables)
+# Large raw datasets
 data/raw/fia/*
+data/raw/bioclim/*
