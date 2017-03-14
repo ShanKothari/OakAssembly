@@ -18,6 +18,7 @@ species_lookup      = species_lookup[ , c("SPCD", "COMMON_NAME", "GENUS", "SPECI
 saveRDS(species_lookup, "data/clean/fia/species_lookup.rds")
 unlink(tmpdir_ref_sp, recursive = TRUE)
 
+
 ################################################################################
 # By State
 ################################################################################
@@ -35,8 +36,8 @@ for(i in seq_along(states) ){
     tmpdir_trees = tempdir()
 
     # Unzip to tempdir the state's tree file
-    unzip(zipfile = dir(states_paths[[i]], pattern = "TREE.zip", full.names = TRUE),
-          exdir   = tmpdir_trees,
+    unzip(zipfile   = dir(states_paths[[i]], pattern = "TREE.zip", full.names = TRUE),
+          exdir     = tmpdir_trees,
           overwrite = TRUE)
 
     keep = c("CN", "PLT_CN", "INVYR", "STATECD", "UNITCD", "COUNTYCD",
@@ -66,12 +67,47 @@ for(i in seq_along(states) ){
     x = x[ !duplicated(x$uid_t), ]
 
     # Write out table
-    p = file.path("data/clean/fia", states[[i]])
+    p = file.path("data/clean/fia/bystate", states[[i]])
 
     if(!dir.exists(p)){
         dir.create(p, showWarnings = FALSE)
     }
 
     saveRDS(x, file.path(p, "intermediate_TREE.rds"))
+}
+
+########################################
+# Plot lookup
+########################################
+
+for(i in seq_along(states) ){
+
+    # Create temporary directory
+    tmpdir_plots = tempdir()
+
+    # Unzip to tempdir the state's tree file
+    unzip(zipfile = dir(states_paths[[i]], pattern = "PLOT.zip", full.names = TRUE),
+          exdir   = tmpdir_plots,
+          overwrite = TRUE)
+
+    keep = c("CN", "LAT", "LON", "ELEV", "ECOSUBCD")
+
+    # Read unzipped CSV
+    x = read.csv(dir(tmpdir_plots, pattern = "PLOT.csv", full.names = TRUE))
+
+    # Clean up temporary dir
+    unlink(tmpdir_plots, recursive = TRUE)
+
+    # Trim useless columns
+    x = x[ , keep]
+
+    # Write out table
+    p = file.path("data/clean/fia/bystate", states[[i]])
+
+    if(!dir.exists(p)){
+        dir.create(p, showWarnings = FALSE)
+    }
+
+    saveRDS(x, file.path(p, "intermediate_PLOT.rds"))
 }
 
