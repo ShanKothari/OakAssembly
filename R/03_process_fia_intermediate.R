@@ -111,3 +111,41 @@ for(i in seq_along(states) ){
     saveRDS(x, file.path(p, "intermediate_PLOT.rds"))
 }
 
+
+########################################
+# Plot condition lookup
+########################################
+
+for(i in seq_along(states) ){
+
+    # Create temporary directory
+    tmpdir_conds = tempdir()
+
+    # Unzip to tempdir the state's tree file
+    unzip(zipfile = dir(states_paths[[i]], pattern = "COND.zip", full.names = TRUE),
+          exdir   = tmpdir_conds,
+          overwrite = TRUE)
+
+    keep = c("PLT_CN", "STDORGCD")
+
+    # Read unzipped CSV
+    x = read.csv(dir(tmpdir_conds, pattern = "COND.csv", full.names = TRUE))
+
+    # Clean up temporary dir
+    unlink(tmpdir_conds, recursive = TRUE)
+
+    # Trim useless columns
+    x = x[ , keep]
+
+    # Trim useless columns
+    x = x[ , keep]
+
+    # Write out table
+    p = file.path("data/clean/fia/bystate", states[[i]])
+
+    if(!dir.exists(p)){
+        dir.create(p, showWarnings = FALSE)
+    }
+
+    saveRDS(x, file.path(p, "intermediate_PLOTCOND.rds"))
+}
