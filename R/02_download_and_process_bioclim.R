@@ -53,7 +53,7 @@ download_bioclim(tiles = c(11, 12, 13, 22, 23),
 
 # Unpack
 bioclim_zip_path = dir("data/raw/bioclim", full.names = TRUE)
-tmp_dir          = file.path(tempdir(), "biolcim")
+tmp_dir          = file.path(tempdir(), "bioclim")
 
 unlink(dir(tmp_dir, full.names = TRUE), recursive = TRUE)
 dir.create(tmp_dir, showWarnings = FALSE)
