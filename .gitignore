@@ -10,3 +10,6 @@ README.html
 # Large raw datasets
 data/raw/fia/*
 data/raw/bioclim/*
+
+# Large clean datasets
+data/clean/bioclim/*
